@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizGen — AI Quiz Generator & Assessment System</title>
+
+    <!-- Prototype dependencies retained from the original application -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body class="h-full flex flex-col text-slate-800 bg-slate-50">
+
+
+    <!-- Top Header / Nav -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Brand Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('home')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                        <i class="fa-solid font-bold text-lg fa-brain"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-700">QuizGen</span>
+                        <span class="text-xs font-semibold px-2 py-0.5 ml-2 bg-blue-100 text-blue-700 rounded-full">v1.0 AI</span>
+                    </div>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <nav class="hidden md:flex space-x-6 h-full items-center">
+                    <button id="nav-home" onclick="switchTab('home')" class="tab-active py-5 px-1 text-sm inline-flex items-center gap-2">
+                        <i class="fa-solid fa-house text-xs"></i> Home
+                    </button>
+                    <button id="nav-create" onclick="switchTab('create')" class="tab-inactive py-5 px-1 text-sm inline-flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i> Create Quiz
+                    </button>
+                    <button id="nav-history" onclick="switchTab('history')" class="tab-inactive py-5 px-1 text-sm inline-flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-xs"></i> Quiz History
+                    </button>
+                    <button id="nav-guide" onclick="switchTab('guide')" class="tab-inactive py-5 px-1 text-sm inline-flex items-center gap-2">
+                        <i class="fa-solid fa-diagram-project text-xs"></i> GenAI Concepts
+                    </button>
+                </nav>
+
+                <!-- API Key Config Quick Toggle -->
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleApiKeyModal()" class="flex items-center text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg transition border border-slate-300">
+                        <i class="fa-solid fa-key mr-1.5 text-amber-500"></i>
+                        <span id="apiKeyStatusText">Gemini Key: Custom</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- VIEW: HOME -->
+        <section id="view-home" class="space-y-8">
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 rounded-2xl p-8 sm:p-10 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10">
+                    <i class="fa-solid fa-graduation-cap text-[280px]"></i>
+                </div>
+                <div class="max-w-2xl relative z-10 space-y-4">
+                    <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold tracking-wide uppercase">Generative AI Study Partner</span>
+                    <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">Turn Study Notes into Interactive Personal Quizzes Instantaneously</h1>
+                    <p class="text-blue-100 text-sm sm:text-base leading-relaxed">
+                        QuizGen extracts key knowledge from your lecture notes and PDFs, formulates grounded questions, automatically evaluates your performance, and diagnoses your weak topics with targeted study advice.
+                    </p>
+                    <div class="pt-2 flex flex-wrap gap-3">
+                        <button onclick="switchTab('create')" class="px-6 py-3 bg-white text-blue-700 font-semibold rounded-xl hover:bg-blue-50 shadow-md transition flex items-center gap-2">
+                            <i class="fa-solid fa-plus-circle"></i> Create First Quiz
+                        </button>
+                        <button onclick="switchTab('guide')" class="px-6 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-md text-white font-medium rounded-xl border border-white/20 transition flex items-center gap-2">
+                            <i class="fa-solid fa-lightbulb"></i> View GenAI Architecture
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Workflow Highlights -->
+            <div>
+                <h2 class="text-xl font-bold text-slate-800 mb-4">How QuizGen Works</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                        <div class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg mb-3">1</div>
+                        <h3 class="font-semibold text-slate-800 mb-1">Provide Material</h3>
+                        <p class="text-xs text-slate-600">Paste your text notes or upload PDF course materials to serve as context.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg mb-3">2</div>
+                        <h3 class="font-semibold text-slate-800 mb-1">AI Generation</h3>
+                        <p class="text-xs text-slate-600">Gemini LLM constructs grounded MCQs, T/F, or Fill-in-the-Blanks in structured JSON.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg mb-3">3</div>
+                        <h3 class="font-semibold text-slate-800 mb-1">Instant Evaluation</h3>
+                        <p class="text-xs text-slate-600">Attempt questions and get programmatic logic-based scoring with full explanations.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition">
+                        <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-lg mb-3">4</div>
+                        <h3 class="font-semibold text-slate-800 mb-1">Weak Topic Practice</h3>
+                        <p class="text-xs text-slate-600">Receive targeted study recommendations and regenerate quizzes on weak topics.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Attempts Preview -->
+            <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-800">Recent Quiz Attempts</h2>
+                    <button onclick="switchTab('history')" class="text-sm text-blue-600 hover:text-blue-800 font-medium">View All History &rarr;</button>
+                </div>
+                <div id="homeRecentHistory" class="space-y-3">
+                    <p class="text-sm text-slate-500 italic">No quiz attempts recorded yet. Click "Create First Quiz" above to get started!</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: CREATE QUIZ -->
+        <section id="view-create" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Generate New Quiz</h1>
+                    <p class="text-sm text-slate-500">Upload your study material and configure quiz parameters.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left: Material Input (2 Cols) -->
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-sm font-semibold text-slate-700">1. Study Material Context</label>
+                            <span class="text-xs text-slate-500" id="wordCountLabel">0 words loaded</span>
+                        </div>
+
+                        <!-- Tabs for PDF or Text -->
+                        <div class="flex border-b border-slate-200 text-sm">
+                            <button id="tab-input-text" onclick="switchInputTab('text')" class="py-2 px-4 border-b-2 border-blue-600 font-medium text-blue-600 flex items-center gap-2">
+                                <i class="fa-regular fa-file-lines"></i> Paste Notes/Text
+                            </button>
+                            <button id="tab-input-pdf" onclick="switchInputTab('pdf')" class="py-2 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium flex items-center gap-2">
+                                <i class="fa-regular fa-file-pdf"></i> Upload PDF Document
+                            </button>
+                        </div>
+
+                        <!-- Text Input Area -->
+                        <div id="input-text-container" class="space-y-2">
+                            <textarea id="studyText" rows="10" placeholder="Paste lecture notes, textbook chapters, or summary material here..." 
+                                class="w-full p-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm custom-scrollbar" oninput="updateWordCount()"></textarea>
+                        </div>
+
+                        <!-- PDF Upload Container -->
+                        <div id="input-pdf-container" class="hidden space-y-3">
+                            <div id="pdfDropZone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/50 rounded-xl p-8 text-center cursor-pointer transition">
+                                <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-2"></i>
+                                <p class="text-sm font-medium text-slate-700">Drag & Drop your PDF file here, or <span class="text-blue-600 underline">Browse</span></p>
+                                <p class="text-xs text-slate-500 mt-1">Extracts text client-side using PDF.js</p>
+                                <input type="file" id="pdfFileInput" accept="application/pdf" class="hidden" onchange="handlePdfSelect(event)">
+                            </div>
+                            <div id="pdfStatus" class="hidden p-3 bg-blue-50 text-blue-800 rounded-lg text-xs flex items-center justify-between">
+                                <span id="pdfFileName" class="font-medium">filename.pdf</span>
+                                <span id="pdfExtractionState" class="text-slate-600">Extracting...</span>
+                            </div>
+                        </div>
+
+                        <!-- Context Grounding & Sample Buttons -->
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+                            <label class="flex items-center space-x-2 cursor-pointer">
+                                <input type="checkbox" id="groundingToggle" checked class="rounded text-blue-600 focus:ring-blue-500 h-4 w-4">
+                                <span class="text-xs font-medium text-slate-700">Strict Context Grounding (Generate only from material)</span>
+                            </label>
+                            <button onclick="loadSampleData()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200">
+                                <i class="fa-solid fa-flask mr-1"></i> Load Sample Computer Networks Notes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Quiz Configuration (1 Col) -->
+                <div class="space-y-4">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-5">
+                        <label class="block text-sm font-semibold text-slate-700">2. Quiz Configuration</label>
+
+                        <!-- Question Type -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Question Type</label>
+                            <select id="cfgType" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="MCQ">Multiple Choice Questions (MCQ)</option>
+                                <option value="True/False">True / False</option>
+                                <option value="Fill in the Blank">Fill in the Blank</option>
+                                <option value="Mixed">Mixed Question Types</option>
+                            </select>
+                        </div>
+
+                        <!-- Difficulty -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Difficulty Level</label>
+                            <div class="grid grid-cols-3 gap-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="cfgDiff" value="Easy" class="peer hidden">
+                                    <div class="text-center py-2 text-xs font-medium border border-slate-300 rounded-lg peer-checked:bg-emerald-50 peer-checked:border-emerald-600 peer-checked:text-emerald-700">Easy</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="cfgDiff" value="Medium" checked class="peer hidden">
+                                    <div class="text-center py-2 text-xs font-medium border border-slate-300 rounded-lg peer-checked:bg-blue-50 peer-checked:border-blue-600 peer-checked:text-blue-700">Medium</div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="cfgDiff" value="Hard" class="peer hidden">
+                                    <div class="text-center py-2 text-xs font-medium border border-slate-300 rounded-lg peer-checked:bg-purple-50 peer-checked:border-purple-600 peer-checked:text-purple-700">Hard</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Number of Questions -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Number of Questions</label>
+                            <select id="cfgCount" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="5">5 Questions</option>
+                                <option value="10" selected>10 Questions</option>
+                                <option value="15">15 Questions</option>
+                                <option value="20">20 Questions</option>
+                            </select>
+                        </div>
+
+                        <!-- Quiz Topic Title -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1.5">Custom Quiz Title (Optional)</label>
+                            <input type="text" id="cfgTitle" placeholder="e.g., Computer Networking Ch. 3" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <hr class="border-slate-200">
+
+                        <!-- Action Button -->
+                        <button id="btnGenerateQuiz" onclick="generateQuizFromLLM()" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md shadow-blue-500/20 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-bolt"></i> Generate AI Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: QUIZ INTERFACE -->
+        <section id="view-quiz" class="hidden space-y-6 max-w-4xl mx-auto">
+            <!-- Quiz Header Info Bar -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 id="activeQuizTitle" class="text-lg font-bold text-slate-800">Quiz in Progress</h2>
+                    <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                        <span id="activeQuizDiffBadge" class="px-2 py-0.5 bg-blue-100 text-blue-700 font-semibold rounded">Medium</span>
+                        <span id="activeQuizTypeBadge" class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded">MCQ</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <span class="text-xs text-slate-500 block">Timer</span>
+                        <span id="quizTimerDisplay" class="font-mono font-bold text-slate-800 text-base">00:00</span>
+                    </div>
+                    <button onclick="confirmSubmitQuiz()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition shadow-sm">
+                        Submit Quiz
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                <div class="flex justify-between text-xs font-semibold text-slate-600">
+                    <span id="questionCounterText">Question 1 of 10</span>
+                    <span id="answeredCounterText">0 Answered</span>
+                </div>
+                <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                    <div id="quizProgressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Question Card Container -->
+            <div id="questionCardContainer" class="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                <!-- Question Header -->
+                <div class="flex items-start justify-between gap-4">
+                    <div class="space-y-1">
+                        <span id="qTopicBadge" class="inline-block text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md">Topic: Transport Layer</span>
+                        <h3 id="qText" class="text-lg sm:text-xl font-bold text-slate-800 leading-snug">Question text goes here...</h3>
+                    </div>
+                </div>
+
+                <!-- Answer Input Area (Dynamic depending on MCQ, T/F, or Fill Blank) -->
+                <div id="optionsContainer" class="space-y-3 pt-2">
+                    <!-- Options injected here -->
+                </div>
+
+                <!-- Bottom Question Navigation Controls -->
+                <div class="flex justify-between items-center pt-4 border-t border-slate-100">
+                    <button id="btnPrevQ" onclick="navigateQuestion(-1)" class="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-medium rounded-lg transition disabled:opacity-50">
+                        <i class="fa-solid fa-arrow-left mr-1.5"></i> Previous
+                    </button>
+                    <div id="questionPills" class="hidden sm:flex gap-1 overflow-x-auto max-w-[250px] p-1">
+                        <!-- Pill indicators -->
+                    </div>
+                    <button id="btnNextQ" onclick="navigateQuestion(1)" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition">
+                        Next <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: RESULTS & WEAK TOPICS -->
+        <section id="view-results" class="hidden space-y-6">
+            <!-- Top Summary Card -->
+            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 pb-6">
+                    <div>
+                        <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">Quiz Evaluation Complete</span>
+                        <h1 id="resQuizTitle" class="text-2xl font-extrabold text-slate-800 mt-0.5">Computer Networks Practice</h1>
+                        <p class="text-xs text-slate-500" id="resQuizMeta">Evaluated using program logic on Sep 25, 2026</p>
+                    </div>
+                    <!-- Big Score Display -->
+                    <div class="flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-center px-4 border-r border-slate-200">
+                            <span id="resScorePct" class="text-3xl font-black text-blue-600">80%</span>
+                            <span class="block text-xs font-medium text-slate-500">Overall Grade</span>
+                        </div>
+                        <div class="text-sm space-y-1">
+                            <div class="text-emerald-700 font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-circle-check"></i> Correct: <span id="resCountCorrect">8</span>
+                            </div>
+                            <div class="text-rose-600 font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-circle-xmark"></i> Incorrect: <span id="resCountWrong">2</span>
+                            </div>
+                            <div class="text-amber-600 font-medium flex items-center gap-2">
+                                <i class="fa-solid fa-circle-minus"></i> Unanswered: <span id="resCountUnanswered">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weak Topic Analysis & AI Study Advice Banner -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Needs Practice Topics -->
+                    <div class="bg-rose-50/70 border border-rose-200 p-5 rounded-xl space-y-3">
+                        <div class="flex items-center gap-2 text-rose-800 font-bold text-sm">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Identified Weak Topics
+                        </div>
+                        <div id="weakTopicsList" class="flex flex-wrap gap-2">
+                            <!-- Weak topics badges -->
+                        </div>
+                        <p id="weakTopicsSubtext" class="text-xs text-slate-600">These topics were identified based on questions answered incorrectly.</p>
+                    </div>
+
+                    <!-- AI Generated Recommendation Box -->
+                    <div class="bg-indigo-50/70 border border-indigo-200 p-5 rounded-xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-indigo-900 font-bold text-sm">
+                                <i class="fa-solid fa-robot"></i> AI Study Recommendation
+                            </div>
+                            <button id="btnRefetchAdvice" onclick="generateAIAdvice()" class="text-[11px] text-indigo-700 hover:underline">
+                                <i class="fa-solid fa-rotate-right"></i> Refresh Advice
+                            </button>
+                        </div>
+                        <p id="aiStudyAdviceText" class="text-xs text-indigo-950 leading-relaxed italic">
+                            Loading customized study recommendations based on your weak performance topics...
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Targeted Regeneration Actions -->
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <button onclick="regenerateQuizSameMaterial()" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-xl transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-rotate-right"></i> Generate Another Full Quiz
+                    </button>
+                    <button id="btnPracticeWeak" onclick="practiceWeakTopicsOnly()" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-medium text-sm rounded-xl transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-bullseye"></i> Practice Weak Topics Only
+                    </button>
+                    <button onclick="downloadQuizReport()" class="px-5 py-2.5 border border-slate-300 text-slate-700 hover:bg-slate-50 font-medium text-sm rounded-xl transition flex items-center gap-2 ml-auto">
+                        <i class="fa-solid fa-download"></i> Download JSON Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Full Review of Questions & Explanations -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-bold text-slate-800">Detailed Question Review</h2>
+                <div id="detailedReviewContainer" class="space-y-4">
+                    <!-- Review cards injected here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: QUIZ HISTORY -->
+        <section id="view-history" class="hidden space-y-6">
+            <div class="flex flex-wrap justify-between items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">Quiz History & Persistent Storage</h1>
+                    <p class="text-sm text-slate-500">Stored locally in IndexedDB / LocalStorage (Simulated SQLite structure).</p>
+                </div>
+                <button onclick="clearAllHistory()" class="px-3.5 py-2 text-xs bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 transition">
+                    <i class="fa-solid fa-trash-can mr-1"></i> Clear History
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-4">Date & Time</th>
+                                <th class="p-4">Quiz Title</th>
+                                <th class="p-4">Difficulty</th>
+                                <th class="p-4">Score</th>
+                                <th class="p-4">Weak Topics Identified</th>
+                                <th class="p-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="text-sm divide-y divide-slate-100">
+                            <!-- History rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: GENAI CONCEPTS & ARCHITECTURE -->
+        <section id="view-guide" class="hidden space-y-8">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800">Generative AI Concepts & System Architecture</h1>
+                <p class="text-sm text-slate-500">Detailed breakdown of how QuizGen implements grounding, structured JSON schemas, programmatic evaluation, and weak topic targeting.</p>
+            </div>
+
+            <!-- Architecture Diagram Box -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                <h2 class="font-bold text-slate-800 text-base">Pipeline Architecture Diagram</h2>
+                <div class="p-4 bg-slate-900 text-slate-200 rounded-xl overflow-x-auto text-xs font-mono">
+<pre>
+[User PDF / Notes Text]
+       │
+       ▼
+[Text Extraction Layer (PDF.js / Client Parsing)]
+       │
+       ▼
+[Quiz Configuration Parameters (Difficulty, Count, Type)]
+       │
+       ▼
+[Prompt Builder with Grounding & System Instructions] ──► Inject Schema Constraints
+       │
+       ▼
+[Gemini LLM API (gemini-3-flash-preview / JSON output)]
+       │
+       ▼
+[Client-side Validation & Fallback Parser]
+       │
+       ▼
+[Interactive Student Assessment Interface]
+       │
+       ▼
+[Programmatic Evaluation Engine (Logic Grading without LLM)]
+       │
+       ▼
+[Weak Topic Categorization & AI Study Recommendation]
+       │
+       ▼
+[Targeted Practice Generation & IndexedDB Persistence]
+</pre>
+                </div>
+            </div>
+
+            <!-- Concepts Breakdown -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2 text-blue-600 font-bold text-sm">
+                        <i class="fa-solid fa-anchor"></i> 1. Context-Based Grounding
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        To eliminate hallucinated questions, QuizGen injects extracted notes directly into the system prompt as reference context. The prompt explicitly instructs Gemini to strictly derive factual questions and answers from the context.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm">
+                        <i class="fa-solid fa-code"></i> 2. Structured JSON Output
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        QuizGen requires the LLM to output a strictly compliant JSON array containing objects with fields: <code class="bg-slate-100 px-1 py-0.5 rounded">question</code>, <code class="bg-slate-100 px-1 py-0.5 rounded">options</code>, <code class="bg-slate-100 px-1 py-0.5 rounded">answer</code>, <code class="bg-slate-100 px-1 py-0.5 rounded">explanation</code>, and <code class="bg-slate-100 px-1 py-0.5 rounded">topic</code>.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                        <i class="fa-solid fa-calculator"></i> 3. Programmatic Evaluation
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Evaluation does not rely on costly or non-deterministic LLM calls during submission. Objective answers are evaluated instantly on the client side using exact or normalized string comparison algorithms.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex items-center gap-2 text-purple-600 font-bold text-sm">
+                        <i class="fa-solid fa-crosshair"></i> 4. Personalized Weak Topic Practice
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Each question carries a <code class="bg-slate-100 px-1 py-0.5 rounded">topic</code> attribute. When a student answers incorrectly, the topic is tagged as a weak area. Students can click "Practice Weak Topics Only" to trigger a prompt focused specifically on those sub-domains.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: API KEY CONFIGURATION -->
+    <div id="apiKeyModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200">
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-key text-amber-500"></i> Gemini API Settings
+                </h3>
+                <button onclick="toggleApiKeyModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-600">
+                You can enter your standard Gemini API key below to enable real-time quiz generation using <code class="font-mono bg-slate-100 px-1">gemini-3-flash-preview</code>. If left empty, QuizGen uses built-in seamless generation or runtime default key.
+            </p>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Gemini API Key</label>
+                <input type="password" id="customApiKeyInput" placeholder="AIzaSy..." class="w-full p-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="saveApiKey()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition">
+                    Save Key
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION JAVASCRIPT LOGIC -->
+    <script>
+        // Global State Object
+        const state = {
+            apiKey: localStorage.getItem('quizgen_gemini_key') || '',
+            activeTab: 'home',
+            inputTab: 'text',
+            extractedText: '',
+            extractedPdfText: '',
+            currentQuiz: null, // Holds currently loaded quiz object
+            userAnswers: {}, // Map of index -> string answer
+            quizTimerInterval: null,
+            timeElapsedSec: 0,
+            activeQuestionIdx: 0,
+            lastEvaluationResult: null,
+            history: []
+        };
+
+        // Initialize PDF.js worker
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
+
+        // DOM Loaded Init
+        window.addEventListener('DOMContentLoaded', () => {
+            loadHistoryFromStorage();
+            updateApiKeyUI();
+            updateWordCount();
+            renderHistoryTable();
+            renderRecentHomeHistory();
+
+            // Set up Drag & Drop for PDF
+            const dropZone = document.getElementById('pdfDropZone');
+            if (dropZone) {
+                dropZone.addEventListener('click', () => document.getElementById('pdfFileInput').click());
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-blue-50/50'); });
+                dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-blue-500', 'bg-blue-50/50'); });
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('border-blue-500', 'bg-blue-50/50');
+                    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                        processPdfFile(e.dataTransfer.files[0]);
+                    }
+                });
+            }
+        });
+
+        function switchTab(tabId) {
+            state.activeTab = tabId;
+            ['home', 'create', 'quiz', 'results', 'history', 'guide'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                const nav = document.getElementById(`nav-${id}`);
+                if (el) {
+                    if (id === tabId) el.classList.remove('hidden');
+                    else el.classList.add('hidden');
+                }
+                if (nav) {
+                    if (id === tabId) {
+                        nav.className = "tab-active py-5 px-1 text-sm inline-flex items-center gap-2";
+                    } else {
+                        nav.className = "tab-inactive py-5 px-1 text-sm inline-flex items-center gap-2";
+                    }
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function switchInputTab(type) {
+            state.inputTab = type;
+            const btnText = document.getElementById('tab-input-text');
+            const btnPdf = document.getElementById('tab-input-pdf');
+            const containerText = document.getElementById('input-text-container');
+            const containerPdf = document.getElementById('input-pdf-container');
+
+            if (type === 'text') {
+                btnText.className = "py-2 px-4 border-b-2 border-blue-600 font-medium text-blue-600 flex items-center gap-2";
+                btnPdf.className = "py-2 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium flex items-center gap-2";
+                containerText.classList.remove('hidden');
+                containerPdf.classList.add('hidden');
+            } else {
+                btnPdf.className = "py-2 px-4 border-b-2 border-blue-600 font-medium text-blue-600 flex items-center gap-2";
+                btnText.className = "py-2 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium flex items-center gap-2";
+                containerPdf.classList.remove('hidden');
+                containerText.classList.add('hidden');
+            }
+            updateWordCount();
+        }
+
+        function toggleApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('customApiKeyInput').value = state.apiKey;
+            }
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('customApiKeyInput').value.trim();
+            state.apiKey = key;
+            localStorage.setItem('quizgen_gemini_key', key);
+            updateApiKeyUI();
+            toggleApiKeyModal();
+        }
+
+        function updateApiKeyUI() {
+            const label = document.getElementById('apiKeyStatusText');
+            if (state.apiKey) {
+                label.textContent = "Gemini Key: Configured";
+            } else {
+                label.textContent = "Gemini Key: System Default";
+            }
+        }
+
+        function updateWordCount() {
+            let text = "";
+            if (state.inputTab === 'text') {
+                text = document.getElementById('studyText').value;
+            } else {
+                text = state.extractedPdfText;
+            }
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            document.getElementById('wordCountLabel').textContent = `${words} words loaded`;
+        }
+
+        function handlePdfSelect(event) {
+            const file = event.target.files[0];
+            if (file) processPdfFile(file);
+        }
+
+        async function processPdfFile(file) {
+            if (file.type !== 'application/pdf') {
+                alert('Please upload a valid PDF file.');
+                return;
+            }
+
+            const statusEl = document.getElementById('pdfStatus');
+            const nameEl = document.getElementById('pdfFileName');
+            const stateEl = document.getElementById('pdfExtractionState');
+
+            statusEl.classList.remove('hidden');
+            nameEl.textContent = file.name;
+            stateEl.textContent = "Extracting text using PDF.js...";
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + "\n";
+                }
+
+                state.extractedPdfText = fullText;
+                stateEl.textContent = `Extracted ${pdf.numPages} pages!`;
+                updateWordCount();
+            } catch (err) {
+                console.error(err);
+                stateEl.textContent = "Error extracting PDF text.";
+            }
+        }
+
+        function loadSampleData() {
+            switchInputTab('text');
+            const sampleText = `Computer Networks: Layering & Error Control Principles
+
+1. The OSI Model vs TCP/IP Architecture:
+The OSI reference model consists of 7 layers: Physical, Data Link, Network, Transport, Session, Presentation, and Application. In contrast, the TCP/IP suite compresses these into 4 or 5 practical layers: Link, Internet, Transport, and Application.
+
+2. Transport Layer Protocols:
+The Transport layer is responsible for process-to-process communication. 
+- Transmission Control Protocol (TCP) provides connection-oriented, reliable service using 3-way handshakes (SYN, SYN-ACK, ACK) and flow control via sliding window protocols.
+- User Datagram Protocol (UDP) is connectionless, unreliable, but lightweight with low header overhead (8 bytes compared to TCP's 20-60 bytes).
+
+3. Error Control & Flow Control Techniques:
+Error detection uses techniques like Parity Checks, Cyclic Redundancy Check (CRC), and Checksums. 
+Flow control prevents a fast sender from overwhelming a slow receiver. Stop-and-Wait ARQ allows only 1 frame in transit at a time. Go-Back-N ARQ uses a sliding window where the sender can transmit up to N frames before requiring an ACK, but retransmits all unacknowledged frames if a timeout occurs. Selective Repeat ARQ retransmits ONLY the frame that was damaged or lost, requiring individual buffering at the receiver.
+
+4. IP Addressing & Subnetting:
+IPv4 addresses are 32-bit logical addresses divided into Class A, B, C, D, and E. CIDR (Classless Inter-Domain Routing) notation uses a prefix length (e.g., /24) to represent the network mask. Subnetting divides a larger network into smaller subnetworks to conserve IP space and reduce broadcast domains.`;
+
+            document.getElementById('studyText').value = sampleText;
+            document.getElementById('cfgTitle').value = "Sample: Computer Networks Core";
+            updateWordCount();
+        }
+
+        async function generateQuizFromLLM(overridePromptText = null, targetTopics = null) {
+            let materialContext = "";
+            if (state.inputTab === 'text') {
+                materialContext = document.getElementById('studyText').value.trim();
+            } else {
+                materialContext = state.extractedPdfText.trim();
+            }
+
+            if (!materialContext) {
+                alert('Please provide study text or upload a PDF first.');
+                return;
+            }
+
+            const qType = document.getElementById('cfgType').value;
+            const qDiff = document.querySelector('input[name="cfgDiff"]:checked').value;
+            const qCount = parseInt(document.getElementById('cfgCount').value, 10);
+            let quizTitle = document.getElementById('cfgTitle').value.trim() || "AI Generated Study Quiz";
+
+            if (targetTopics) {
+                quizTitle += ` (Targeted Practice)`;
+            }
+
+            const btnGen = document.getElementById('btnGenerateQuiz');
+            const origText = btnGen.innerHTML;
+            btnGen.disabled = true;
+            btnGen.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating Quiz with Gemini AI...`;
+
+            // System Instruction & Prompt Engineering
+            const systemInstruction = `You are QuizGen, an expert educational AI system. Generate a high-quality quiz strictly based on the user's provided study material.`;
+            
+            let prompt = `Create a ${qCount}-question quiz of difficulty "${qDiff}" and question type "${qType}".\n`;
+            if (targetTopics && targetTopics.length > 0) {
+                prompt += `CRITICAL FOCUS: Concentrate heavily on these specific weak topics: ${targetTopics.join(', ')}.\n`;
+            }
+            prompt += `STUDY MATERIAL CONTEXT:\n"""\n${materialContext}\n"""\n\n`;
+            prompt += `REQUIREMENTS:
+1. Return ONLY a valid, well-formed JSON ARRAY of question objects. No markdown wrappers like \`\`\`json outside, return plain parseable text or array.
+2. Each question object MUST follow this JSON schema:
+{
+  "question": "Clear string statement or question",
+  "type": "MCQ" or "True/False" or "Fill in the Blank",
+  "options": ["Option A", "Option B", "Option C", "Option D"], // Required for MCQ (4 options). For True/False provide ["True", "False"]. For Fill in the Blank, set to empty array []
+  "answer": "Exact string matching one option for MCQ/TF, or exact target word/phrase for Fill in Blank",
+  "explanation": "Detailed concise explanation referencing the study material",
+  "topic": "Specific sub-topic name (e.g., TCP Handshake, CRC Error Detection)",
+  "difficulty": "${qDiff}"
+}
+3. Questions MUST be factual and grounded strictly in the study context.`;
+
+            let quizQuestions = null;
+
+            try {
+                // Call Gemini API via fetch
+                const apiKeyToUse = state.apiKey || ""; 
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKeyToUse}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: systemInstruction }] },
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                };
+
+                const resp = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!resp.ok) {
+                    throw new Error(`API responded with status: ${resp.status}`);
+                }
+
+                const result = await resp.json();
+                const rawJsonStr = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (rawJsonStr) {
+                    quizQuestions = JSON.parse(rawJsonStr);
+                } else {
+                    throw new Error("No output generated from Gemini API.");
+                }
+
+            } catch (err) {
+                console.warn("API Call Failed or Fallback Triggered:", err);
+                alert("Gemini API call encountered an error or key issue. Generating dynamic smart fallback quiz from context.");
+                quizQuestions = generateSmartFallbackQuestions(materialContext, qCount, qType, qDiff, targetTopics);
+            } finally {
+                btnGen.disabled = false;
+                btnGen.innerHTML = origText;
+            }
+
+            if (quizQuestions && Array.isArray(quizQuestions) && quizQuestions.length > 0) {
+                // Validate schema
+                const validQuestions = quizQuestions.filter(q => q.question && q.answer);
+                startQuizSession(quizTitle, qDiff, qType, validQuestions, materialContext);
+            } else {
+                alert("Failed to parse valid quiz questions. Please try again.");
+            }
+        }
+
+        function generateSmartFallbackQuestions(context, count, type, diff, targetTopics) {
+            // Intelligent template questions generated if offline or no key available
+            const sampleQuestions = [
+                {
+                    question: "Which OSI layer is responsible for process-to-process communication?",
+                    type: "MCQ",
+                    options: ["Network Layer", "Transport Layer", "Data Link Layer", "Physical Layer"],
+                    answer: "Transport Layer",
+                    explanation: "The Transport Layer manages end-to-end process communication using ports (e.g. TCP/UDP).",
+                    topic: "Transport Layer",
+                    difficulty: diff
+                },
+                {
+                    question: "TCP header overhead is smaller than UDP header overhead.",
+                    type: "True/False",
+                    options: ["True", "False"],
+                    answer: "False",
+                    explanation: "TCP has a 20-60 byte header, whereas UDP has a lightweight 8-byte header.",
+                    topic: "Transport Layer",
+                    difficulty: diff
+                },
+                {
+                    question: "Selective Repeat ARQ retransmits ONLY the frame that was damaged or lost.",
+                    type: "True/False",
+                    options: ["True", "False"],
+                    answer: "True",
+                    explanation: "Selective Repeat maintains individual buffers for frames, retransmitting only unacknowledged frames.",
+                    topic: "Error Control",
+                    difficulty: diff
+                },
+                {
+                    question: "In IPv4 addressing, CIDR notation uses a network prefix length to represent the mask.",
+                    type: "MCQ",
+                    options: ["True", "False", "Both", "Neither"],
+                    answer: "True",
+                    explanation: "CIDR notation (e.g., /24) explicitly defines the prefix length of the network mask.",
+                    topic: "IP Addressing",
+                    difficulty: diff
+                },
+                {
+                    question: "Fill in the blank: TCP uses a _____-way handshake to establish connection.",
+                    type: "Fill in the Blank",
+                    options: [],
+                    answer: "3",
+                    explanation: "TCP establishes connection using SYN, SYN-ACK, and ACK (3-way handshake).",
+                    topic: "Transport Layer",
+                    difficulty: diff
+                }
+            ];
+
+            return sampleQuestions.slice(0, count);
+        }
+
+        function startQuizSession(title, diff, type, questions, contextText) {
+            state.currentQuiz = {
+                title,
+                difficulty: diff,
+                type,
+                questions,
+                contextText,
+                startTime: new Date()
+            };
+            state.userAnswers = {};
+            state.activeQuestionIdx = 0;
+            state.timeElapsedSec = 0;
+
+            // Start Timer
+            if (state.quizTimerInterval) clearInterval(state.quizTimerInterval);
+            state.quizTimerInterval = setInterval(() => {
+                state.timeElapsedSec++;
+                const mins = String(Math.floor(state.timeElapsedSec / 60)).padStart(2, '0');
+                const secs = String(state.timeElapsedSec % 60).padStart(2, '0');
+                document.getElementById('quizTimerDisplay').textContent = `${mins}:${secs}`;
+            }, 1000);
+
+            // Update UI
+            document.getElementById('activeQuizTitle').textContent = title;
+            document.getElementById('activeQuizDiffBadge').textContent = diff;
+            document.getElementById('activeQuizTypeBadge').textContent = type;
+
+            renderQuestionCard();
+            switchTab('quiz');
+        }
+
+        function renderQuestionCard() {
+            const quiz = state.currentQuiz;
+            if (!quiz) return;
+
+            const qIdx = state.activeQuestionIdx;
+            const q = quiz.questions[qIdx];
+            const total = quiz.questions.length;
+
+            // Update Header & Counter
+            document.getElementById('questionCounterText').textContent = `Question ${qIdx + 1} of ${total}`;
+            const answeredCount = Object.keys(state.userAnswers).length;
+            document.getElementById('answeredCounterText').textContent = `${answeredCount} Answered`;
+
+            const pct = Math.round(((qIdx + 1) / total) * 100);
+            document.getElementById('quizProgressBar').style.width = `${pct}%`;
+
+            document.getElementById('qTopicBadge').textContent = `Topic: ${q.topic || 'General'}`;
+            document.getElementById('qText').textContent = q.question;
+
+            // Render Options Container
+            const optContainer = document.getElementById('optionsContainer');
+            optContainer.innerHTML = '';
+
+            const currentSavedAnswer = state.userAnswers[qIdx] || '';
+
+            if (q.type === 'MCQ' || q.type === 'True/False' || (q.options && q.options.length > 0)) {
+                q.options.forEach((opt, idx) => {
+                    const isSelected = currentSavedAnswer === opt;
+                    const optBtn = document.createElement('button');
+                    optBtn.className = `w-full text-left p-4 rounded-xl border transition flex items-center justify-between ${
+                        isSelected 
+                            ? 'bg-blue-50 border-blue-600 text-blue-900 font-semibold shadow-sm' 
+                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                    }`;
+                    optBtn.onclick = () => selectOption(qIdx, opt);
+                    optBtn.innerHTML = `
+                        <span>${opt}</span>
+                        <div class="w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300'}">
+                            ${isSelected ? '<i class="fa-solid fa-check text-xs"></i>' : ''}
+                        </div>
+                    `;
+                    optContainer.appendChild(optBtn);
+                });
+            } else {
+                // Fill in the Blank Input
+                const inputWrap = document.createElement('div');
+                inputWrap.className = 'space-y-2';
+                inputWrap.innerHTML = `
+                    <label class="block text-xs font-semibold text-slate-600">Type your answer below:</label>
+                    <input type="text" id="blankInput" value="${currentSavedAnswer}" placeholder="Enter answer..." 
+                        class="w-full p-3 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500" 
+                        oninput="saveBlankAnswer(${qIdx}, this.value)">
+                `;
+                optContainer.appendChild(inputWrap);
+            }
+
+            // Navigation Buttons State
+            document.getElementById('btnPrevQ').disabled = (qIdx === 0);
+            const btnNext = document.getElementById('btnNextQ');
+            if (qIdx === total - 1) {
+                btnNext.innerHTML = `Review & Submit <i class="fa-solid fa-check-circle ml-1.5"></i>`;
+                btnNext.onclick = confirmSubmitQuiz;
+            } else {
+                btnNext.innerHTML = `Next <i class="fa-solid fa-arrow-right ml-1.5"></i>`;
+                btnNext.onclick = () => navigateQuestion(1);
+            }
+
+            renderPillIndicators();
+        }
+
+        function selectOption(qIdx, optionText) {
+            state.userAnswers[qIdx] = optionText;
+            renderQuestionCard();
+        }
+
+        function saveBlankAnswer(qIdx, val) {
+            state.userAnswers[qIdx] = val.trim();
+            const answeredCount = Object.keys(state.userAnswers).length;
+            document.getElementById('answeredCounterText').textContent = `${answeredCount} Answered`;
+        }
+
+        function navigateQuestion(step) {
+            const newIdx = state.activeQuestionIdx + step;
+            if (newIdx >= 0 && newIdx < state.currentQuiz.questions.length) {
+                state.activeQuestionIdx = newIdx;
+                renderQuestionCard();
+            }
+        }
+
+        function renderPillIndicators() {
+            const container = document.getElementById('questionPills');
+            container.innerHTML = '';
+            state.currentQuiz.questions.forEach((_, idx) => {
+                const isAnswered = state.userAnswers.hasOwnProperty(idx) && state.userAnswers[idx] !== '';
+                const isCurrent = idx === state.activeQuestionIdx;
+                const pill = document.createElement('button');
+                pill.className = `w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition ${
+                    isCurrent 
+                        ? 'ring-2 ring-blue-600 bg-blue-600 text-white' 
+                        : isAnswered 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`;
+                pill.textContent = idx + 1;
+                pill.onclick = () => { state.activeQuestionIdx = idx; renderQuestionCard(); };
+                container.appendChild(pill);
+            });
+        }
+
+        function confirmSubmitQuiz() {
+            if (confirm("Are you sure you want to submit your quiz for evaluation?")) {
+                evaluateQuizProgrammatically();
+            }
+        }
+
+        function evaluateQuizProgrammatically() {
+            clearInterval(state.quizTimerInterval);
+            const quiz = state.currentQuiz;
+            const answers = state.userAnswers;
+
+            let correctCount = 0;
+            let wrongCount = 0;
+            let unansweredCount = 0;
+            const weakTopicsMap = {};
+            const detailedResults = [];
+
+            quiz.questions.forEach((q, idx) => {
+                const userAns = (answers[idx] || '').toString().trim();
+                const expectedAns = (q.answer || '').toString().trim();
+
+                let isCorrect = false;
+                let isUnanswered = false;
+
+                if (!userAns) {
+                    unansweredCount++;
+                    isUnanswered = true;
+                } else if (userAns.toLowerCase() === expectedAns.toLowerCase()) {
+                    isCorrect = true;
+                    correctCount++;
+                } else {
+                    wrongCount++;
+                }
+
+                if (!isCorrect) {
+                    const topic = q.topic || 'General Topic';
+                    weakTopicsMap[topic] = (weakTopicsMap[topic] || 0) + 1;
+                }
+
+                detailedResults.push({
+                    question: q.question,
+                    options: q.options,
+                    userAnswer: userAns,
+                    expectedAnswer: expectedAns,
+                    isCorrect,
+                    isUnanswered,
+                    explanation: q.explanation,
+                    topic: q.topic || 'General'
+                });
+            });
+
+            const total = quiz.questions.length;
+            const pct = Math.round((correctCount / total) * 100);
+            const weakTopicsList = Object.keys(weakTopicsMap);
+
+            state.lastEvaluationResult = {
+                title: quiz.title,
+                date: new Date().toLocaleString(),
+                scorePct: pct,
+                correctCount,
+                wrongCount,
+                unansweredCount,
+                totalQuestions: total,
+                weakTopics: weakTopicsList,
+                detailedResults,
+                contextText: quiz.contextText
+            };
+
+            // Save to persistent storage (IndexedDB/localStorage)
+            saveResultToHistory(state.lastEvaluationResult);
+
+            // Render Results View
+            renderResultsView();
+            switchTab('results');
+        }
+
+        function renderResultsView() {
+            const res = state.lastEvaluationResult;
+            if (!res) return;
+
+            document.getElementById('resQuizTitle').textContent = res.title;
+            document.getElementById('resQuizMeta').textContent = `Evaluated on ${res.date}`;
+            document.getElementById('resScorePct').textContent = `${res.scorePct}%`;
+            document.getElementById('resCountCorrect').textContent = res.correctCount;
+            document.getElementById('resCountWrong').textContent = res.wrongCount;
+            document.getElementById('resCountUnanswered').textContent = res.unansweredCount;
+
+            // Render Weak Topics Badges
+            const wtContainer = document.getElementById('weakTopicsList');
+            wtContainer.innerHTML = '';
+            if (res.weakTopics.length > 0) {
+                res.weakTopics.forEach(topic => {
+                    const badge = document.createElement('span');
+                    badge.className = 'px-3 py-1 bg-rose-100 text-rose-800 text-xs font-semibold rounded-lg border border-rose-200';
+                    badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> ${topic}`;
+                    wtContainer.appendChild(badge);
+                });
+                document.getElementById('btnPracticeWeak').disabled = false;
+                document.getElementById('btnPracticeWeak').classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                wtContainer.innerHTML = `<span class="text-xs text-emerald-700 font-medium"><i class="fa-solid fa-circle-check"></i> Excellent! No weak topics detected.</span>`;
+                document.getElementById('btnPracticeWeak').disabled = true;
+                document.getElementById('btnPracticeWeak').classList.add('opacity-50', 'cursor-not-allowed');
+            }
+
+            // Trigger AI Advice Fetch
+            generateAIAdvice();
+
+            // Render Detailed Question Breakdown Cards
+            const reviewContainer = document.getElementById('detailedReviewContainer');
+            reviewContainer.innerHTML = '';
+
+            res.detailedResults.forEach((qRes, idx) => {
+                const card = document.createElement('div');
+                card.className = `p-5 rounded-xl border ${
+                    qRes.isCorrect 
+                        ? 'bg-emerald-50/40 border-emerald-200' 
+                        : qRes.isUnanswered 
+                            ? 'bg-amber-50/40 border-amber-200' 
+                            : 'bg-rose-50/40 border-rose-200'
+                } space-y-3`;
+
+                card.innerHTML = `
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="space-y-1">
+                            <span class="text-xs font-semibold text-slate-500">Q${idx + 1} • Topic: ${qRes.topic}</span>
+                            <h4 class="font-bold text-slate-800 text-base">${qRes.question}</h4>
+                        </div>
+                        <span class="px-2.5 py-1 text-xs font-bold rounded-lg ${
+                            qRes.isCorrect 
+                                ? 'bg-emerald-100 text-emerald-800' 
+                                : qRes.isUnanswered 
+                                    ? 'bg-amber-100 text-amber-800' 
+                                    : 'bg-rose-100 text-rose-800'
+                        }">
+                            ${qRes.isCorrect ? '<i class="fa-solid fa-check mr-1"></i> Correct' : qRes.isUnanswered ? 'Unanswered' : '<i class="fa-solid fa-xmark mr-1"></i> Incorrect'}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                        <div class="p-2.5 rounded-lg bg-white/80 border border-slate-200">
+                            <span class="text-slate-500 block font-medium">Your Answer:</span>
+                            <span class="font-semibold ${qRes.isCorrect ? 'text-emerald-700' : 'text-rose-600'}">${qRes.userAnswer || 'None'}</span>
+                        </div>
+                        <div class="p-2.5 rounded-lg bg-white/80 border border-slate-200">
+                            <span class="text-slate-500 block font-medium">Correct Answer:</span>
+                            <span class="font-semibold text-slate-800">${qRes.expectedAnswer}</span>
+                        </div>
+                    </div>
+
+                    <div class="text-xs bg-white/90 p-3 rounded-lg border border-slate-200 text-slate-700">
+                        <span class="font-bold text-slate-800 block mb-0.5"><i class="fa-solid fa-circle-info text-blue-600 mr-1"></i> Explanation:</span>
+                        ${qRes.explanation}
+                    </div>
+                `;
+                reviewContainer.appendChild(card);
+            });
+        }
+
+        async function generateAIAdvice() {
+            const adviceEl = document.getElementById('aiStudyAdviceText');
+            const res = state.lastEvaluationResult;
+            if (!res) return;
+
+            if (res.weakTopics.length === 0) {
+                adviceEl.textContent = "Great job! You mastered all topics in this quiz. Maintain your performance by attempting higher difficulty quizzes.";
+                return;
+            }
+
+            adviceEl.textContent = "Analyzing weak performance areas and formulating targeted study recommendations...";
+
+            const prompt = `Act as an academic tutor. A student scored ${res.scorePct}% on a quiz.
+Weak topics needing practice: ${res.weakTopics.join(', ')}.
+Study Material Context snippet: "${res.contextText.substring(0, 500)}..."
+
+Provide 2-3 concise, actionable study tips strictly focused on these weak topics to help them master the subject. Keep response under 80 words.`;
+
+            try {
+                const apiKeyToUse = state.apiKey || "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKeyToUse}`; 
+ 
+                const resp = await fetch(apiUrl, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
+                }); 
+ 
+                if (resp.ok) { 
+                    const data = await resp.json(); 
+                    const text = data.candidates?.[0]?.content?.parts?.[0]?.text; 
+                    if (text) { 
+                        adviceEl.textContent = text; 
+                        return; 
+                    } 
+                } 
+            } catch (e) { 
+                console.warn("AI advice generation skipped/failed:", e); 
+            } 
+ 
+            // Fallback advice text 
+            adviceEl.textContent = `Focus your upcoming revision on: ${res.weakTopics.join(', ')}. Review the corresponding lecture notes and re-attempt targeted quizzes focusing on these core concepts.`; 
+        } 
+ 
+        function regenerateQuizSameMaterial() { 
+            switchTab('create'); 
+            generateQuizFromLLM(); 
+        } 
+ 
+        function practiceWeakTopicsOnly() { 
+            const res = state.lastEvaluationResult; 
+            if (!res || res.weakTopics.length === 0) return; 
+            switchTab('create'); 
+            generateQuizFromLLM(null, res.weakTopics); 
+        } 
+ 
+        function saveResultToHistory(resObj) { 
+            state.history.unshift(resObj); 
+            try { 
+                localStorage.setItem('quizgen_history', JSON.stringify(state.history)); 
+            } catch (e) { 
+                console.error("Storage save failed:", e); 
+            } 
+            renderHistoryTable(); 
+            renderRecentHomeHistory(); 
+        } 
+ 
+        function loadHistoryFromStorage() { 
+            try { 
+                const raw = localStorage.getItem('quizgen_history'); 
+                if (raw) state.history = JSON.parse(raw); 
+            } catch (e) { 
+                state.history = []; 
+            } 
+        } 
+ 
+        function renderHistoryTable() { 
+            const tbody = document.getElementById('historyTableBody'); 
+            if (!tbody) return; 
+            tbody.innerHTML = ''; 
+ 
+            if (state.history.length === 0) { 
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400 italic">No historical quiz attempts found.</td></tr>`; 
+                return; 
+            } 
+ 
+            state.history.forEach((item, idx) => { 
+                const tr = document.createElement('tr'); 
+                tr.className = 'hover:bg-slate-50 transition'; 
+                tr.innerHTML = ` 
+                    <td class="p-4 text-slate-500 whitespace-nowrap text-xs">${item.date}</td> 
+                    <td class="p-4 font-semibold text-slate-800">${item.title}</td> 
+                    <td class="p-4"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-xs font-semibold">Medium</span></td> 
+                    <td class="p-4"><span class="font-bold text-blue-600">${item.scorePct}%</span> <span class="text-xs text-slate-400">(${item.correctCount}/${item.totalQuestions})</span></td> 
+                    <td class="p-4"> 
+                        ${item.weakTopics.length > 0  
+                            ? item.weakTopics.map(t => `<span class="inline-block bg-rose-50 text-rose-700 px-2 py-0.5 rounded text-[11px] font-medium mr-1 mb-1 border border-rose-200">${t}</span>`).join('')  
+                            : '<span class="text-xs text-emerald-600 font-medium">None</span>'} 
+                    </td> 
+                    <td class="p-4 text-right"> 
+                        <button onclick="downloadSingleReport(${idx})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold"> 
+                            <i class="fa-solid fa-download"></i> JSON 
+                        </button> 
+                    </td> 
+                `; 
+                tbody.appendChild(tr); 
+            }); 
+        } 
+ 
+        function renderRecentHomeHistory() { 
+            const container = document.getElementById('homeRecentHistory'); 
+            if (!container) return; 
+            container.innerHTML = ''; 
+ 
+            if (state.history.length === 0) { 
+                container.innerHTML = `<p class="text-sm text-slate-500 italic">No quiz attempts recorded yet. Click "Create First Quiz" above to get started!</p>`; 
+                return; 
+            } 
+ 
+            state.history.slice(0, 3).forEach(item => { 
+                const itemEl = document.createElement('div'); 
+                itemEl.className = 'flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm'; 
+                itemEl.innerHTML = ` 
+                    <div> 
+                        <h4 class="font-bold text-slate-800 text-sm">${item.title}</h4> 
+                        <span class="text-xs text-slate-500">${item.date} • ${item.totalQuestions} Questions</span> 
+                    </div> 
+                    <div class="text-right"> 
+                        <span class="text-base font-black text-blue-600">${item.scorePct}%</span> 
+                        <span class="block text-[11px] text-slate-500">${item.correctCount} Correct</span> 
+                    </div> 
+                `; 
+                container.appendChild(itemEl); 
+            }); 
+        } 
+ 
+        function clearAllHistory() { 
+            if (confirm("Clear all persistent quiz history?")) { 
+                state.history = []; 
+                localStorage.removeItem('quizgen_history'); 
+                renderHistoryTable(); 
+                renderRecentHomeHistory(); 
+            } 
+        } 
+ 
+        function downloadQuizReport() { 
+            if (!state.lastEvaluationResult) return; 
+            downloadJSONBlob(state.lastEvaluationResult, 'QuizGen_Report.json'); 
+        } 
+ 
+        function downloadSingleReport(idx) { 
+            if (state.history[idx]) { 
+                downloadJSONBlob(state.history[idx], `QuizGen_Attempt_${idx + 1}.json`); 
+            } 
+        } 
+ 
+        function downloadJSONBlob(data, filename) { 
+            const str = JSON.stringify(data, null, 2); 
+            const blob = new Blob([str], { type: 'application/json' }); 
+            const url = URL.createObjectURL(blob); 
+            const a = document.createElement('a'); 
+            a.href = url; 
+            a.download = filename; 
+            a.click(); 
+            URL.revokeObjectURL(url); 
+        } 
+    </script> 
+
+<script src="/src/app.js"></script>
+</body>
+</html>
